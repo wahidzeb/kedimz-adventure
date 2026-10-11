@@ -244,6 +244,15 @@ body:not(.ads-on) .adslot{display:none!important}
 <div id="toast"></div>
 <div id="rotHint" class="hidden">↻ Tip: rotate to landscape for the best view</div>
 <script>
+/* GA4 custom events (Games by Zaib). Safe: never throws, light (no per-frame calls, dedupe + per-page cap). */
+var ZT_N = 0, ZT_K = '', ZT_KT = 0, ZT_T = 0, ZT_S = 0, ZT_H = 0;
+function zt(n, p) { try { var k = n + JSON.stringify(p || 0), t = Date.now(); if (ZT_N > 150 || (k === ZT_K && t - ZT_KT < 500)) return; ZT_N++; ZT_K = k; ZT_KT = t; window.gtag && gtag('event', n, Object.assign({ game_id: 'kedimz-adventure' }, p)); } catch (e) {} }
+function ztPlay(on) { try { var t = Date.now(); if (ZT_S) { ZT_T += (t - ZT_S) / 1e3; ZT_S = 0; } if (on) ZT_S = t; } catch (e) {} }
+function ztPing(r) { try { ztPlay(false); if (ZT_T >= 1) zt('play_time', { play_time: Math.round(ZT_T), reason: r }); ZT_T = 0; } catch (e) {} }
+try {
+  document.addEventListener('visibilitychange', function () { if (document.hidden) { ZT_H = !!ZT_S; ztPing('page_hide'); } else if (ZT_H) { ZT_H = 0; ztPlay(true); } });
+  document.addEventListener('click', function (e) { try { var a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a) return; var u = new URL(a.href, location.href); if (!/^https?:$/.test(u.protocol)) return; if (u.host === location.host || /(^|\.)zaibgames\.com$/.test(u.host)) { if (u.pathname.indexOf('/kedimz-adventure/') !== 0) zt('more_games_click', { link_url: u.href }); } else zt('outbound_click', { link_url: u.href, link_domain: u.host, outbound: true }); } catch (err) {} }, true);
+} catch (e) {}
 'use strict';
 // ================= Kedimz Adventure by Zaib — utilities =================
 const TAU = Math.PI * 2, T = 32, DT = 1 / 60;
@@ -2034,6 +2043,7 @@ function startLevel(n) {
   G.acc = 0; SAVE.plays++; showScreen(null); $('#hudPause').classList.remove('hidden');
   CTRL.ptrs.clear(); recomputeTouch();
   updateRotHint();
+  zt('game_start', { mode: 'adventure', level: n + 1 }); zt('level_start', { level: n + 1, level_name: LEVELS[n].name }); ztPlay(true);
 }
 function bankCoins(w, cleared) {
   const mult = SAVE.ups.lucky ? 1.25 : 1; const c = Math.round(w.coinsGot * mult); SAVE.coins += c; SAVE.totCoins += c; w.coinsGot = 0; return c;
@@ -2046,11 +2056,18 @@ function finishLevel() {
   if (n + 1 < LEVELS.length) SAVE.unlocked = Math.max(SAVE.unlocked, n + 2);
   SAVE.mapW = LEVELS[Math.min(n + 1, LEVELS.length - 1)].w;
   writeSave();
+  zt('level_end', { level: n + 1, level_name: LEVELS[n].name, success: true, score: w.score });
+  if (newBest) zt('post_score', { score: w.score, level: n + 1, time: +w.t.toFixed(1) });
+  if (coins > 0) zt('earn_virtual_currency', { virtual_currency_name: 'coins', value: coins, item_name: 'level_clear' });
+  if (LEVELS[n].boss && n + 1 < LEVELS.length) zt('unlock_achievement', { achievement_id: 'world_' + (LEVELS[n].w + 2) });
+  ztPing('level_clear');
   G.state = 'results'; $('#hudPause').classList.add('hidden');
   showResults({ n, got, coins, time: w.t, newBest, prevBest, score: w.score, stomps: w.stomps, kills: w.kills });
 }
-function gameOver() { bankCoins(G.w, false); writeSave(); G.state = 'over'; $('#hudPause').classList.add('hidden'); showScreen('scrOver'); playMusic(''); }
-function quitToMap() { if (G.w) { bankCoins(G.w, false); writeSave(); } G.w = null; openMap(); }
+function gameOver() { const zc = bankCoins(G.w, false); writeSave();
+  zt('level_end', { level: G.lv + 1, level_name: LEVELS[G.lv].name, success: false, score: G.w.score }); zt('game_over', { score: G.w.score, level: G.lv + 1 });
+  if (zc > 0) zt('earn_virtual_currency', { virtual_currency_name: 'coins', value: zc, item_name: 'game_over' }); ztPing('game_over'); G.state = 'over'; $('#hudPause').classList.add('hidden'); showScreen('scrOver'); playMusic(''); }
+function quitToMap() { if (G.w) { const zc = bankCoins(G.w, false); writeSave(); if (zc > 0) zt('earn_virtual_currency', { virtual_currency_name: 'coins', value: zc, item_name: 'level_quit' }); ztPing('quit'); } G.w = null; openMap(); }
 function pauseGame() { if (G.state !== 'play') return; G.state = 'paused'; showScreen('scrPause'); applyVolumes(); CTRL.ptrs.clear(); recomputeTouch(); }
 function resumeGame() { if (G.state !== 'paused') return; G.state = 'play'; showScreen(null); applyVolumes(); G.acc = 0; for (const k in KEYS) KEYS[k] = false; }
 
@@ -2319,7 +2336,7 @@ function renderShop() {
       const lvl = SAVE.ups[u.id] || 0, maxed = lvl >= u.max, price = maxed ? 0 : u.price[lvl];
       const d = document.createElement('div'); d.className = 'item' + (maxed ? ' sel' : '');
       d.innerHTML = `<div style="font-size:30px;line-height:1.2">${{ heart: '❤️', big: '🐟', magnet: '🧲', lives: '🧶', lucky: '🍀' }[u.id]}</div><div>${u.name}</div><div class="ds">${u.desc}</div><div class="pr">${maxed ? '✔ MAX' : `<i class="coinI"></i>${price}`} <span style="opacity:.7">${u.max > 1 ? `(${lvl}/${u.max})` : ''}</span></div>`;
-      tap(d, () => { if (maxed) return; if (SAVE.coins < price) { SFX.deny(); toast('Not enough coins'); return; } SAVE.coins -= price; SAVE.ups[u.id] = lvl + 1; writeSave(); SFX.buy(); toast(u.name + ' upgraded!'); renderShop(); });
+      tap(d, () => { if (maxed) return; if (SAVE.coins < price) { SFX.deny(); toast('Not enough coins'); return; } SAVE.coins -= price; SAVE.ups[u.id] = lvl + 1; zt('spend_virtual_currency', { virtual_currency_name: 'coins', value: price, item_name: u.name + ' ' + (lvl + 1) }); writeSave(); SFX.buy(); toast(u.name + ' upgraded!'); renderShop(); });
       grid.appendChild(d);
     }
     return;
@@ -2336,7 +2353,7 @@ function renderShop() {
     tap(d, () => {
       if (own[it.id]) { if (shopTab === 'skins') SAVE.skin = it.id; else SAVE.hat = it.id; writeSave(); renderShop(); return; }
       if (SAVE.coins < it.price) { SFX.deny(); toast('Not enough coins — collect more in levels!'); return; }
-      SAVE.coins -= it.price; own[it.id] = 1; if (shopTab === 'skins') SAVE.skin = it.id; else SAVE.hat = it.id; writeSave(); SFX.buy(); toast('Unlocked ' + it.name + '!'); renderShop();
+      SAVE.coins -= it.price; own[it.id] = 1; zt('spend_virtual_currency', { virtual_currency_name: 'coins', value: it.price, item_name: it.name, item_category: shopTab }); if (shopTab === 'skins') SAVE.skin = it.id; else SAVE.hat = it.id; writeSave(); SFX.buy(); toast('Unlocked ' + it.name + '!'); renderShop();
     });
     grid.appendChild(d);
   }
@@ -2388,8 +2405,8 @@ function setupUI() {
   tap('#bNextW', () => { G.mapW = Math.min(WORLDS.length - 1, G.mapW + 1); SAVE.mapW = G.mapW; renderMap(); });
   $$('.tab').forEach(t => tap(t, () => { shopTab = t.dataset.tab; renderShop(); }));
   tap('#bShopBack', () => { if (G.prev === 'map') openMap(); else openTitle(); });
-  $$('.tog').forEach(t => tap(t, () => { const k = t.dataset.set; SAVE.settings[k] = !SAVE.settings[k]; writeSave(); renderSettings(); applyVolumes(); if (k === 'lefty') layoutControls(); if (k === 'vibe' && SAVE.settings.vibe) vibrate(40); }));
-  $$('.seg button').forEach(b => tap(b, () => { const k = b.parentNode.dataset.seg; let v = b.dataset.v; if (k === 'bsize') v = +v; SAVE.settings[k] = v; writeSave(); renderSettings(); if (k === 'gfx') { if (v === 'auto') QUALITY.lvl = 2; applyQualitySetting(); } layoutControls(); }));
+  $$('.tog').forEach(t => tap(t, () => { const k = t.dataset.set; SAVE.settings[k] = !SAVE.settings[k]; zt('settings_change', { setting: k, value: String(SAVE.settings[k]) }); writeSave(); renderSettings(); applyVolumes(); if (k === 'lefty') layoutControls(); if (k === 'vibe' && SAVE.settings.vibe) vibrate(40); }));
+  $$('.seg button').forEach(b => tap(b, () => { const k = b.parentNode.dataset.seg; let v = b.dataset.v; if (k === 'bsize') v = +v; SAVE.settings[k] = v; zt('settings_change', { setting: k, value: String(v) }); writeSave(); renderSettings(); if (k === 'gfx') { if (v === 'auto') QUALITY.lvl = 2; applyQualitySetting(); } layoutControls(); }));
   tap('#bSetBack', () => closeSettings());
   tap('#bReset', () => { showScreen('scrConfirm'); });
   tap('#bConfNo', () => { showScreen('scrSettings'); });
