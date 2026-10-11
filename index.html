@@ -138,6 +138,13 @@ canvas#game{position:fixed;left:0;top:0;width:100%;height:100%;display:block;tou
  #scrSettings .sets{display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
 }
 @media (orientation:portrait){#nodes{grid-template-columns:repeat(2,1fr)}}
+/* === AD SLOTS: DISABLED (AdSense review pending) ===
+   Empty .adslot placeholders are hidden completely (display:none, no reserved box, no "AD" label)
+   so nothing near the Play/primary buttons looks like accidental-click bait.
+   RE-ENABLE LATER: put the real ad code inside the slot, then add class "ads-on" to <body> (or delete this rule).
+   PLACEMENT RULE: a re-enabled ad must sit at least ~150px away from Play/primary buttons
+   (AdSense accidental-click policy) - move/space the slot accordingly before turning it on. */
+body:not(.ads-on) .adslot{display:none!important}
 </style>
 </head>
 <body>
