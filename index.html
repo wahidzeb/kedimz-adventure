@@ -263,8 +263,56 @@ function ztPlay(on) { try { var t = Date.now(); if (ZT_S) { ZT_T += (t - ZT_S) /
 function ztPing(r) { try { ztPlay(false); if (ZT_T >= 1) zt('play_time', { play_time: Math.round(ZT_T), reason: r }); ZT_T = 0; } catch (e) {} }
 try {
   document.addEventListener('visibilitychange', function () { if (document.hidden) { ZT_H = !!ZT_S; ztPing('page_hide'); } else if (ZT_H) { ZT_H = 0; ztPlay(true); } });
-  document.addEventListener('click', function (e) { try { var a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a) return; var u = new URL(a.href, location.href); if (!/^https?:$/.test(u.protocol)) return; if (u.host === location.host || /(^|\.)zaibgames\.com$/.test(u.host)) { if (u.pathname.indexOf('/kedimz-adventure/') !== 0) zt('more_games_click', { link_url: u.href }); } else zt('outbound_click', { link_url: u.href, link_domain: u.host, outbound: true }); } catch (err) {} }, true);
+  document.addEventListener('click', function (e) { try { var a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a || a.id === 'zmgBtn') return; var u = new URL(a.href, location.href); if (!/^https?:$/.test(u.protocol)) return; if (u.host === location.host || /(^|\.)zaibgames\.com$/.test(u.host)) { if (u.pathname.indexOf('/kedimz-adventure/') !== 0) zt('more_games_click', { link_url: u.href }); } else zt('outbound_click', { link_url: u.href, link_domain: u.host, outbound: true }); } catch (err) {} }, true);
 } catch (e) {}
+/* More games button (Games by Zaib) – shown only on menu / game-over screens, never in gameplay. */
+(function () {
+  try {
+    var URL_ = 'https://zaibgames.com/';
+    var C = {"menu": ["scrTitle"], "over": ["scrResults", "scrOver"], "r": "16px", "font": "bold 15px \"Trebuchet MS\",system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif", "fg": "#fff", "bg": "linear-gradient(180deg,#5ec0ff,#2f86e8)", "bd": "rgba(255,255,255,.6)", "ink": "#1d4f99", "tt": "none"};
+    var st = document.createElement('style');
+    st.textContent =
+      '#zmgBtn{position:fixed;z-index:9990;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);' +
+      'display:none;align-items:center;gap:7px;height:38px;padding:0 14px 0 11px;border-radius:' + C.r + ';text-decoration:none;' +
+      'font:' + C.font + ';letter-spacing:.3px;color:' + C.fg + ';background:' + C.bg + ';' +
+      'border:2px solid ' + C.bd + ';box-shadow:0 4px 0 ' + C.ink + ',0 6px 14px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.35);' +
+      'text-transform:' + C.tt + ';-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation;' +
+      'transition:transform .12s ease,box-shadow .12s ease;white-space:nowrap}' +
+      '#zmgBtn.on{display:inline-flex;animation:zmgIn .35s cubic-bezier(.2,1.4,.4,1) both}' +
+      '#zmgBtn:active{transform:translateY(3px);box-shadow:0 1px 0 ' + C.ink + ',0 2px 6px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.3)}' +
+      '#zmgBtn svg{width:18px;height:18px;flex:none}' +
+      '#zmgBtn:focus-visible{outline:3px solid #fff;outline-offset:2px}' +
+      '@keyframes zmgIn{from{opacity:0;transform:translateY(-8px) scale(.9)}to{opacity:1;transform:none}}';
+    document.head.appendChild(st);
+    var a = document.createElement('a');
+    a.id = 'zmgBtn'; a.className = 'zmg'; a.href = URL_; a.setAttribute('aria-label', 'More games');
+    a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2" fill="currentColor"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2" fill="currentColor" opacity=".75"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2" fill="currentColor" opacity=".75"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" fill="currentColor"/></svg><span>More games</span>';
+    document.body.appendChild(a);
+    var MENU = C.menu, OVER = C.over;
+    function vis(el) { return el && !el.classList.contains('hidden') && getComputedStyle(el).display !== 'none'; }
+    function upd() {
+      try {
+        var from = '', other = false;
+        var ss = document.querySelectorAll('.screen');
+        for (var i = 0; i < ss.length; i++) {
+          var s = ss[i]; if (!vis(s)) continue;
+          if (MENU.indexOf(s.id) >= 0) from = from || 'menu';
+          else if (OVER.indexOf(s.id) >= 0) from = 'gameover';
+          else other = true;
+        }
+        if (from && !other) { a.dataset.from = from; a.classList.add('on'); } else a.classList.remove('on');
+      } catch (e) {}
+    }
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      try { typeof zt === 'function' && zt('more_games_click', { from: a.dataset.from || 'menu' }); } catch (err) {}
+      setTimeout(function () { location.href = URL_; }, 150);
+    });
+    var mo = new MutationObserver(upd);
+    document.querySelectorAll('.screen').forEach(function (s) { mo.observe(s, { attributes: true, attributeFilter: ['class', 'style'] }); });
+    upd(); setInterval(upd, 1000);
+  } catch (e) {}
+})();
 'use strict';
 // ================= Kedimz Adventure by Zaib — utilities =================
 const TAU = Math.PI * 2, T = 32, DT = 1 / 60;
