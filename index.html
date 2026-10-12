@@ -18,6 +18,13 @@
 <meta name="description" content="Kedimz Adventure by Zaib — a cat-hero side-scrolling platformer: 5 worlds, 20 levels, bosses, power-ups and a hat shop.">
 <title>Kedimz Adventure by Zaib</title>
 <link rel="canonical" href="https://zaibgames.com/kedimz-adventure/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Games by Zaib">
+<meta property="og:title" content="Kedimz Adventure by Zaib">
+<meta property="og:description" content="Kedimz Adventure by Zaib — a cat-hero side-scrolling platformer: 5 worlds, 20 levels, bosses, power-ups and a hat shop.">
+<meta property="og:url" content="https://zaibgames.com/kedimz-adventure/">
+<meta property="og:image" content="https://zaibgames.com/kedimz-adventure/title.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 26 16 6l12 12h8l12-12 4 20c4 6 4 14 0 20-6 10-34 10-40 0-4-6-4-14 0-20z' fill='%23ff9d3c' stroke='%232a1f2b' stroke-width='4' stroke-linejoin='round'/%3E%3Ccircle cx='24' cy='34' r='5' fill='%232a1f2b'/%3E%3Ccircle cx='40' cy='34' r='5' fill='%232a1f2b'/%3E%3Cpath d='M29 43h6l-3 3z' fill='%23ff7a95'/%3E%3C/svg%3E">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -145,6 +152,11 @@ canvas#game{position:fixed;left:0;top:0;width:100%;height:100%;display:block;tou
    PLACEMENT RULE: a re-enabled ad must sit at least ~150px away from Play/primary buttons
    (AdSense accidental-click policy) - move/space the slot accordingly before turning it on. */
 body:not(.ads-on) .adslot{display:none!important}
+#scrHelp{overflow:hidden}
+#scrHelp .panel{display:flex;flex-direction:column;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));max-height:calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));width:100%}
+#scrHelp .panel h2{flex:none}
+#helpBody{overflow-y:auto;min-height:0;flex:1;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;padding-right:2px}
+#bHelpBack{flex:none}
 </style>
 </head>
 <body>
@@ -202,7 +214,7 @@ body:not(.ads-on) .adslot{display:none!important}
   <div class="panel">
     <h2>How to Play</h2>
     <div class="help" id="helpBody"></div>
-    <button class="btn mint" id="bHelpBack" style="margin-top:10px">Got it!</button>
+    <button class="btn mint" id="bHelpBack" style="margin-top:10px;flex:none">Got it!</button>
   </div>
 </div>
 
