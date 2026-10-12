@@ -2002,9 +2002,11 @@ function defaultSave() {
     ups: { heart: 0, big: 0, magnet: 0, lives: 0, lucky: 0 }, settings: { sound: true, music: true, vibe: true, shake: true, ctrl: 'buttons', bsize: 1, lefty: false, gfx: 'auto' }, seenHelp: false, mapW: 0, totCoins: 0, plays: 0 };
 }
 let SAVE = defaultSave();
+// Save migration: deep-merge a loaded save onto the default schema. Keeps all progress, fills fields missing from older/partial saves, and ignores null or wrong-typed values.
+function zMerge(d, s) { if (Array.isArray(d)) { if (!Array.isArray(s)) return d; const n = Math.max(d.length, s.length), o = []; for (let i = 0; i < n; i++) { const dv = d[i], v = s[i]; o[i] = i >= d.length ? v : (v == null || (dv != null && typeof dv !== typeof v) || (typeof v === 'number' && !isFinite(v))) ? dv : (dv && typeof dv === 'object') ? zMerge(dv, v) : v; } return o; } if (!d || typeof d !== 'object') return s; if (!s || typeof s !== 'object' || Array.isArray(s)) return d; for (const k in s) { const v = s[k], dv = d[k]; if (v == null) continue; if (dv === undefined || dv === null) { d[k] = v; continue; } if (typeof dv !== typeof v || Array.isArray(dv) !== Array.isArray(v)) continue; if (typeof v === 'number' && !isFinite(v)) continue; d[k] = typeof v === 'object' ? zMerge(dv, v) : v; } return d; }
 function loadSave() {
   try {
-    const s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    const s0 = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); const s = (s0 && typeof s0 === 'object' && !Array.isArray(s0)) ? zMerge(defaultSave(), s0) : null;
     if (s && typeof s === 'object') {
       const d = defaultSave(); SAVE = Object.assign(d, s);
       for (const k of ['settings', 'ups', 'ownSkins', 'ownHats']) SAVE[k] = Object.assign(d[k], s[k] || {});
