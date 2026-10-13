@@ -1,0 +1,42 @@
+{
+  "id": "/kedimz-adventure/",
+  "name": "Kedimz Adventure",
+  "short_name": "Kedimz Adventur",
+  "description": "Kedimz Adventure by Zaib \u2014 a cat-hero side-scrolling platformer: 5 worlds, 20 levels, bosses, power-ups and a hat shop.",
+  "lang": "en",
+  "start_url": "/kedimz-adventure/?source=pwa",
+  "scope": "/kedimz-adventure/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#2a1f4a",
+  "background_color": "#2a1f4a",
+  "categories": [
+    "games"
+  ],
+  "icons": [
+    {
+      "src": "/kedimz-adventure/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/kedimz-adventure/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/kedimz-adventure/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/kedimz-adventure/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
