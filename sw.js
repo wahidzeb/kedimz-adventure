@@ -1,6 +1,6 @@
 /* Kedimz Adventure service worker, scope /kedimz-adventure/ only (keeps the hub's "/" worker off this game).
    Network-first for the game page (fresh builds win online, cached copy offline); cache-first for own icons. */
-const C = "kedimz-adventure-v13";
+const C = "kedimz-adventure-v14";
 self.addEventListener("install", (e) => { e.waitUntil(Promise.race([new Promise((ok) => setTimeout(ok, 10000)), caches.open(C).then((c) => c.addAll(["./", "manifest.webmanifest", "icons/icon-192.png"])).catch(() => {})]).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith("kedimz-adventure-") && k !== C).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", (e) => {
